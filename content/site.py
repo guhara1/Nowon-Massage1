@@ -6,6 +6,10 @@ BRAND = "바로GO"
 PHONE = "0508-202-4719"
 PHONE_DISPLAY = "0508-202-4719"
 
+# IndexNow(Bing·Naver 즉시 색인 통보) 키. 빌드 시 루트에 {INDEXNOW_KEY}.txt 로 노출된다.
+# 키를 바꾸면 tools/indexnow.py 통보와 루트 키 파일이 자동으로 함께 갱신된다.
+INDEXNOW_KEY = "09e51a5cb711d20c4a81684684ab09ca"
+
 # 상단 메뉴 — 하위 메뉴에는 키워드를 반복하지 않고 지역명·역명만 표시한다.
 # 구조: 노원구 → 대표 행정동 → 지하철역 → 생활권. 그룹 부모는 별도 페이지가 아니라
 # 메인 페이지의 해당 섹션 앵커(/#areas, /#stations, /#living)로 묶어 얇은 페이지를 만들지 않는다.
