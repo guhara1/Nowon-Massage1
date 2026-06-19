@@ -1,0 +1,227 @@
+# 메인 페이지 — 노원구 전체 허브. 모든 키워드를 밀어 넣지 않고 하위 페이지로 연결한다.
+from .site import BASE_URL, BRAND, PHONE, PHONE_DISPLAY
+
+# 실제 오프라인 매장 주소가 없으므로 LocalBusiness 대신 Organization 을 사용한다.
+# 선호 썸네일을 명확히 지정하기 위해 ImageObject 도 함께 둔다.
+_JSONLD = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "노원구 출장마사지·홈타이 지역별 예약 안내",
+  "url": "{BASE_URL}/",
+  "description": "노원구 출장마사지·홈타이 예약 전 대표동, 역세권, 생활권, 이용 기준을 정리한 안내 페이지",
+  "inLanguage": "ko-KR",
+  "primaryImageOfPage": {{ "@type": "ImageObject", "url": "{BASE_URL}/assets/og-image.png", "width": 1200, "height": 630 }},
+  "isPartOf": {{ "@type": "WebSite", "name": "{BRAND}", "url": "{BASE_URL}/" }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "ImageObject",
+  "contentUrl": "{BASE_URL}/assets/og-image.png",
+  "url": "{BASE_URL}/assets/og-image.png",
+  "width": 1200,
+  "height": 630,
+  "caption": "노원구 출장마사지·홈타이 지역별 예약 안내 - {BRAND}"
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{ "@type": "ListItem", "position": 1, "name": "노원구 출장마사지·홈타이", "item": "{BASE_URL}/" }}
+  ]
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "{BRAND}",
+  "url": "{BASE_URL}/",
+  "image": "{BASE_URL}/assets/og-image.png",
+  "telephone": "{PHONE}",
+  "description": "서울 노원구 전지역 방문 출장마사지·홈타이 예약 안내",
+  "areaServed": {{ "@type": "AdministrativeArea", "name": "서울특별시 노원구" }},
+  "contactPoint": {{
+    "@type": "ContactPoint",
+    "telephone": "{PHONE}",
+    "contactType": "reservations",
+    "areaServed": "KR",
+    "availableLanguage": "Korean"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {{
+      "@type": "Question",
+      "name": "노원구 전지역 방문이 가능한가요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "예약 시간, 정확한 위치, 배정 상황에 따라 가능 여부가 달라집니다. 월계동, 공릉동, 하계동, 중계동, 상계동 대표동을 기준으로 안내하며, 노원역·상계역·중계역 등 역세권 위치도 예약 시 주소 기준으로 확인합니다." }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "상계1동·중계1동 같은 번호 동은 왜 따로 없나요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "상계1~10동, 중계본동·1·2·3·4동, 공릉1·2동, 하계1·2동, 월계1·2·3동처럼 번호로 나뉜 동은 상계동·중계동·공릉동·하계동·월계동 대표 페이지에서 통합 안내해 중복 페이지 위험을 줄입니다. 예약은 주소 기준이라 동 번호를 모르셔도 됩니다." }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "노원역처럼 환승역도 안내가 되나요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "노원역(4·7호선), 태릉입구역(6·7호선), 석계역(1·6호선)은 환승역이지만 노선별로 페이지를 쪼개지 않고 역마다 한 페이지로 안내합니다. 정확한 가능 여부는 도로명 주소 기준으로 확인합니다." }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "당일 예약도 가능한가요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "가능할 수 있지만 저녁 시간대와 주말은 문의가 몰릴 수 있어 사전 예약을 권장합니다." }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "홈타이와 출장마사지는 무엇이 다른가요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "출장마사지는 관리사가 자택·숙소·사무실로 방문하는 형태 전체를 가리키고, 홈타이는 그중 집에서 받는 타이마사지를 부르는 말입니다. 자세한 내용은 홈타이 이용 가이드에서 확인하세요." }}
+    }}
+  ]
+}}
+</script>
+"""
+
+_HERO = f"""<section class="hero">
+  <div class="hero-inner">
+    <p class="hero-badge">Premium Visiting Spa · 서울 노원구 전지역</p>
+    <h1>노원구 출장마사지 · 노원구 홈타이<br>지역별 예약 안내</h1>
+    <p class="hero-lead">샵까지 갈 필요 없이, 계신 곳에서 받는 방문 관리.<br>자택·오피스텔·숙소 어디든 전화 한 통이면 예약이 끝납니다.</p>
+    <div class="hero-actions">
+      <a class="hero-btn primary" href="tel:{PHONE}">📞 {PHONE_DISPLAY}</a>
+      <a class="hero-btn" href="/reservation/">예약 안내 보기</a>
+    </div>
+    <ul class="hero-stats">
+      <li><strong>5개</strong><span>대표동 안내</span></li>
+      <li><strong>12개</strong><span>역세권 안내</span></li>
+      <li><strong>10개</strong><span>생활권 안내</span></li>
+      <li><strong>24시간</strong><span>예약 상담</span></li>
+    </ul>
+  </div>
+</section>
+"""
+
+_BODY = f"""
+<p class="lead">노원구 출장마사지와 홈타이 예약을 찾는 분들을 위해 방문 가능 지역, 예약 절차, 이용 전 확인사항을 한곳에 정리했습니다. 이 페이지는 노원구 전체 구조를 설명하는 허브 역할을 하며, 자세한 내용은 대표동별·역세권별·생활권별 안내에서 확인하실 수 있습니다.</p>
+
+<section id="why">
+<h2>노원구에서 출장마사지를 찾을 때 먼저 확인할 기준</h2>
+<p>노원구 출장마사지를 찾는 분들은 보통 현재 위치에서 가까운 방문 가능 지역을 먼저 확인합니다. 노원구는 서울 북동부에 자리한 자치구로, 노원역을 중심으로 한 상계동 상권, 중계동 학원가와 은행사거리 생활권, 공릉동과 월계동의 대학·주거 생활권, 하계동과 중랑천 인접 생활권이 함께 있는 지역입니다. 그래서 단순히 ‘노원 전지역 가능’이라고만 적기보다, 대표동과 역세권을 나누어 본인 위치를 먼저 정한 뒤 방문 가능 시간과 이동 기준을 확인하는 흐름이 좋습니다. 바로GO는 노원구 전지역을 대상으로 자택, 오피스텔, 숙소 어디든 관리사가 직접 방문하며, 샵을 오가는 이동 없이 계신 곳에서 바로 관리받고 그대로 쉴 수 있다는 점이 가장 큰 장점입니다.</p>
+</section>
+
+<section id="differences">
+<h2>월계동·공릉동·하계동·중계동·상계동 생활권 차이</h2>
+<p>노원구는 다섯 개 대표동의 성격이 서로 다릅니다. 월계동은 광운대·인덕대 대학가와 주거지가 섞인 남서쪽 생활권으로 광운대역·월계역·석계역과 가깝습니다. 공릉동은 서울과학기술대와 경춘선숲길, 동안로 먹자골목이 있는 주거·대학가 복합 지역으로 공릉역·태릉입구역을 끼고 있습니다. 하계동은 중랑천 산책로 인접의 아파트 대단지 주거지로 하계역이 중심입니다. 중계동은 은행사거리 학원가와 불암산 배경의 교육·주거 수요가 강한 지역이고, 상계동은 노원역 상권과 상계주공 대단지, 수락산·불암산 생활권을 아우르는 노원구에서 가장 넓은 대표 지역입니다. 동마다 이동 동선과 검색 의도가 다르므로, 본인 생활권에 맞는 대표동 페이지에서 세부 안내를 확인하시는 편이 정확합니다.</p>
+</section>
+
+<section id="areas">
+<h2>대표동별 방문 가능 지역 안내</h2>
+<p>지역 안내는 월계동, 공릉동, 하계동, 중계동, 상계동 다섯 개 대표동을 기준으로 구성했습니다. 상계1동부터 상계10동까지, 중계본동·중계1·2·3·4동, 공릉1·2동, 하계1·2동, 월계1·2·3동처럼 번호로 나뉜 행정동은 각각 페이지로 만들지 않고 대표동으로 통합해, 같은 생활권을 잘게 쪼개 비슷한 내용을 반복하지 않도록 정리했습니다. 거주하시거나 머무시는 동을 선택해 주세요.</p>
+<ul class="card-grid">
+<li><a href="/seoul/nowon/wolgye-dong-chuljangmassage/">월계동</a></li>
+<li><a href="/seoul/nowon/gongneung-dong-chuljangmassage/">공릉동</a></li>
+<li><a href="/seoul/nowon/hagye-dong-chuljangmassage/">하계동</a></li>
+<li><a href="/seoul/nowon/junggye-dong-chuljangmassage/">중계동</a></li>
+<li><a href="/seoul/nowon/sanggye-dong-chuljangmassage/">상계동</a></li>
+</ul>
+</section>
+
+<section id="stations">
+<h2>노원역·상계역·중계역·공릉역 역세권 안내</h2>
+<p>역을 기준으로 위치를 설명하는 것이 편하시다면 역세권 안내를 참고하세요. 노원역은 4호선과 7호선이 만나는 환승역이자 노원구 최대 상권이고, 상계역·당고개역은 4호선, 중계역·하계역·공릉역·마들역·수락산역은 7호선, 광운대역·월계역은 1호선, 태릉입구역은 6·7호선, 석계역은 1·6호선 구간입니다. 환승역이라도 노선별로 페이지를 따로 만들지 않고 역마다 한 페이지로 안내합니다.</p>
+<ul class="card-grid">
+<li><a href="/seoul/nowon/nowon-station-chuljangmassage/">노원역</a></li>
+<li><a href="/seoul/nowon/sanggye-station-chuljangmassage/">상계역</a></li>
+<li><a href="/seoul/nowon/junggye-station-chuljangmassage/">중계역</a></li>
+<li><a href="/seoul/nowon/hagye-station-chuljangmassage/">하계역</a></li>
+<li><a href="/seoul/nowon/gongneung-station-chuljangmassage/">공릉역</a></li>
+<li><a href="/seoul/nowon/taereung-entrance-station-chuljangmassage/">태릉입구역</a></li>
+<li><a href="/seoul/nowon/seokgye-station-chuljangmassage/">석계역</a></li>
+<li><a href="/seoul/nowon/gwangundae-station-chuljangmassage/">광운대역</a></li>
+<li><a href="/seoul/nowon/wolgye-station-chuljangmassage/">월계역</a></li>
+<li><a href="/seoul/nowon/madeul-station-chuljangmassage/">마들역</a></li>
+<li><a href="/seoul/nowon/suraksan-station-chuljangmassage/">수락산역</a></li>
+<li><a href="/seoul/nowon/danggogae-station-chuljangmassage/">당고개역</a></li>
+</ul>
+</section>
+
+<section id="living">
+<h2>노원구 생활권·주요 거점별 안내</h2>
+<p>같은 동 안에서도 상권, 주거지, 학원가, 산책로 거점은 분위기와 이동 동선이 다릅니다. 생활권 안내는 노원역 상권, 상계동 주거지, 중계 은행사거리, 중계동 학원가, 공릉 경춘선숲길, 월계 광운대, 하계 중랑천, 마들·수락산, 태릉입구·공릉, 석계·월계 인접 생활권으로 나누어 거점별 방문 기준을 보충합니다. 대표동·역세권 페이지와 중복되지 않도록 각 거점의 고유한 생활 동선만 설명합니다.</p>
+<ul class="card-grid">
+<li><a href="/seoul/nowon/nowon-station-area-chuljangmassage/">노원역 상권</a></li>
+<li><a href="/seoul/nowon/sanggye-residential-area-chuljangmassage/">상계동 주거지</a></li>
+<li><a href="/seoul/nowon/junggye-bank-sageori-area-chuljangmassage/">중계 은행사거리</a></li>
+<li><a href="/seoul/nowon/junggye-academy-area-chuljangmassage/">중계동 학원가</a></li>
+<li><a href="/seoul/nowon/gongneung-gyeongchun-line-forest-area-chuljangmassage/">공릉 경춘선숲길</a></li>
+<li><a href="/seoul/nowon/wolgye-gwangundae-area-chuljangmassage/">월계 광운대</a></li>
+<li><a href="/seoul/nowon/hagye-jungnangcheon-area-chuljangmassage/">하계 중랑천</a></li>
+<li><a href="/seoul/nowon/madeul-suraksan-area-chuljangmassage/">마들·수락산</a></li>
+<li><a href="/seoul/nowon/taereung-gongneung-area-chuljangmassage/">태릉입구·공릉</a></li>
+<li><a href="/seoul/nowon/seokgye-wolgye-area-chuljangmassage/">석계·월계</a></li>
+</ul>
+</section>
+
+<section id="hometai">
+<h2>노원구 홈타이 예약 전 확인사항</h2>
+<p>노원구 홈타이는 자택, 숙소, 사무실 인근에서 예약 가능 여부를 먼저 확인한 뒤 이용하는 방문형 관리 서비스입니다. 홈타이는 집에서 받는 타이마사지를 가리키는 말로, 오일을 쓰지 않고 편한 옷차림으로 받는 지압·스트레칭 구성이라 샤워 부담이 적어 처음 이용하는 분도 시작하기 좋습니다. 예약 전에는 방문 가능 지역, 관리 가능 시간, 추가 이동비 여부, 결제 방식, 취소 기준, 개인정보 처리 기준을 먼저 확인하시는 것이 좋습니다. 노원역·중계동처럼 접근성이 좋은 지역도 있지만 수락산역·당고개역·월계동 일부처럼 차량 이동 기준이 달라질 수 있는 지역도 있으므로, 각 페이지의 지역별 이동 기준을 함께 확인해 주세요. 진행 방식과 추천 대상은 <a href="/hometai/">홈타이 이용 가이드</a>에서, 결제·취소 기준은 <a href="/reservation/">예약 안내</a>에서 정리했습니다.</p>
+</section>
+
+<section id="dedup">
+<h2>노원구 페이지 중복 방지 운영 기준</h2>
+<p>이 사이트는 검색 품질 기준에 맞춰 도어웨이 페이지를 만들지 않습니다. 첫째, 번호로 나뉜 동은 대표동으로 통합합니다. 둘째, 환승역도 URL은 하나만 두고 출구별·노선별 페이지를 만들지 않습니다. 셋째, 노선이 예정·미개통인 역은 단독 색인 페이지로 만들지 않습니다. 넷째, 석계역은 성북구 경계 성격이 있어 월계동 인접 생활권으로, 태릉입구역은 노원·중랑 경계 성격이 있어 공릉동 인접 생활권으로 설명합니다. 다섯째, 모든 페이지 본문은 지역명만 바꾼 복붙이 아니라 그 지역의 실제 사실로 다르게 작성합니다. 이렇게 해야 출장마사지와 홈타이 키워드를 담으면서도 중복 콘텐츠 위험을 줄인 지역 안내 구조가 됩니다.</p>
+</section>
+
+<section id="guide">
+<h2>노원구 출장마사지 사이트 이용 방법</h2>
+<p>이 사이트는 메인 페이지가 노원구 전체 안내를 맡고, 대표동 페이지가 생활권별 안내를, 역세권 페이지가 역 주변 안내를, 생활권 페이지가 거점별 보충 안내를 각각 담당하도록 구성했습니다. 본인에게 익숙한 기준이 동이라면 대표동 페이지를, 역이라면 역세권 페이지를 보시면 되며 예약 절차와 이용 기준은 어느 쪽이든 동일합니다. 모든 안내는 과장 없이 방문 가능 지역, 예약 절차, 취소 기준, 개인정보 처리 기준을 분명히 보여 드리는 것을 원칙으로 하며, 불법적이거나 무리한 요청은 어떤 경우에도 진행하지 않습니다.</p>
+</section>
+
+<section id="faq">
+<h2>자주 묻는 질문</h2>
+<div class="faq-item">
+<h3>노원구 전지역 방문이 가능한가요?</h3>
+<p>예약 시간, 정확한 위치, 배정 상황에 따라 가능 여부가 달라집니다. 월계동, 공릉동, 하계동, 중계동, 상계동 대표동을 기준으로 안내하며 역세권·생활권 위치도 예약 시 주소 기준으로 확인합니다.</p>
+</div>
+<div class="faq-item">
+<h3>상계1동·중계1동 같은 번호 동은 왜 따로 없나요?</h3>
+<p>상계1~10동, 중계본동·중계1·2·3·4동, 공릉1·2동, 하계1·2동, 월계1·2·3동처럼 번호로 나뉜 동은 대표동 페이지에서 통합 안내해 중복 페이지 위험을 줄입니다. 예약은 주소 기준이라 동 번호를 모르셔도 됩니다.</p>
+</div>
+<div class="faq-item">
+<h3>노원역처럼 환승역도 안내가 되나요?</h3>
+<p>노원역(4·7호선), 태릉입구역(6·7호선), 석계역(1·6호선)은 환승역이지만 노선별로 페이지를 쪼개지 않고 역마다 한 페이지로 안내합니다. 위치는 도로명 주소 기준으로 확인합니다.</p>
+</div>
+<div class="faq-item">
+<h3>당일 예약도 가능한가요?</h3>
+<p>가능할 수 있지만 저녁 시간대와 주말은 문의가 몰릴 수 있어 사전 예약을 권장합니다. 일정이 보이는 대로 미리 연락 주시면 대기 없이 받으실 수 있습니다.</p>
+</div>
+<div class="faq-item">
+<h3>홈타이와 출장마사지는 무엇이 다른가요?</h3>
+<p>출장마사지는 관리사가 방문하는 형태 전체를, 홈타이는 그중 집에서 받는 타이마사지를 부르는 말입니다. 자세한 내용은 <a href="/hometai/">홈타이 이용 가이드</a>에서 확인하세요.</p>
+</div>
+</section>
+
+<section id="contact" class="cta">
+<h2>예약문의</h2>
+<p>노원구 방문 관리 예약과 상담은 전화로 가장 빠르게 진행됩니다. 위치와 희망 시간을 알려주시면 가능 여부를 바로 확인해 드립니다.</p>
+<a class="cta-phone" href="tel:{PHONE}">{PHONE_DISPLAY}</a>
+</section>
+"""
+
+PAGE = {
+    "path": "",
+    "title": "노원구 출장마사지｜노원역·상계·중계 홈타이 지역 안내",
+    "desc": "노원구 출장마사지·홈타이 예약 전 노원역, 상계동, 중계동, 공릉동 생활권을 확인하세요.",
+    "h1": "노원구 출장마사지 · 노원구 홈타이 지역별 예약 안내",
+    "body": _BODY,
+    "extra_head": _JSONLD,
+    "breadcrumb": [],
+    "hero": _HERO,
+}
