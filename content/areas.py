@@ -1,5 +1,6 @@
 # 지역별 안내 — 노원구 대표 행정동 5개. 번호 행정동(상계1~10동, 중계본동·1·2·3·4동, 공릉1·2동, 하계1·2동, 월계1·2·3동)은 개별 페이지를 만들지 않고 대표 동으로 통합한다.
 from .site import PHONE, PHONE_DISPLAY
+from .pricing import PRICING
 
 _CTA = f"""
 <section class="cta">
@@ -15,7 +16,7 @@ def _dong(slug, name, title, desc, sections):
         "title": title,
         "desc": desc,
         "h1": f"{name} 방문 관리 안내",
-        "body": sections + _CTA,
+        "body": sections + PRICING + _CTA,
         "breadcrumb": [("지역별 안내", "/#areas"), (name, None)],
         "og_image": f"/assets/og/{slug}.png",
     }

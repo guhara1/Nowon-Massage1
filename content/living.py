@@ -1,5 +1,6 @@
 # 생활권·주요 거점별 안내 — 노원구 10개 생활권. 동·역 페이지와 중복되지 않도록 각 거점의 고유한 생활 동선만 설명한다.
 from .site import PHONE, PHONE_DISPLAY
+from .pricing import PRICING
 
 _CTA = f"""
 <section class="cta">
@@ -15,7 +16,7 @@ def _area(slug, name, title, desc, sections):
         "title": title,
         "desc": desc,
         "h1": f"{name} 방문 관리 안내",
-        "body": sections + _CTA,
+        "body": sections + PRICING + _CTA,
         "breadcrumb": [("생활권 안내", "/#living"), (name, None)],
         "og_image": f"/assets/og/{slug}.png",
     }

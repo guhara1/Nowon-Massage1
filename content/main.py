@@ -1,5 +1,6 @@
 # 메인 페이지 — 노원구 전체 허브. 모든 키워드를 밀어 넣지 않고 하위 페이지로 연결한다.
 from .site import BASE_URL, BRAND, PHONE, PHONE_DISPLAY
+from .pricing import PRICING
 
 # 실제 오프라인 매장 주소가 없으므로 LocalBusiness 대신 Organization 을 사용한다.
 # 선호 썸네일을 명확히 지정하기 위해 ImageObject 도 함께 둔다.
@@ -208,6 +209,7 @@ _BODY = f"""
 </div>
 </section>
 
+{PRICING}
 <section id="contact" class="cta">
 <h2>예약문의</h2>
 <p>노원구 방문 관리 예약과 상담은 전화로 가장 빠르게 진행됩니다. 위치와 희망 시간을 알려주시면 가능 여부를 바로 확인해 드립니다.</p>
