@@ -2,6 +2,9 @@
 from .site import BASE_URL, BRAND, PHONE, PHONE_DISPLAY
 from .pricing import PRICING
 
+# 네이버 서치어드바이저 사이트 소유확인 메타 (메인 페이지에만 출력)
+_NAVER_VERIFY = '<meta name="naver-site-verification" content="d9df7fe2e710a9afed9a67c411d8404b921cd40a" />\n'
+
 # 실제 오프라인 매장 주소가 없으므로 LocalBusiness 대신 Organization 을 사용한다.
 # 선호 썸네일을 명확히 지정하기 위해 ImageObject 도 함께 둔다.
 _JSONLD = f"""<script type="application/ld+json">
@@ -223,7 +226,7 @@ PAGE = {
     "desc": "노원구 출장마사지·홈타이 예약 전 노원역, 상계동, 중계동, 공릉동 생활권을 확인하세요.",
     "h1": "노원구 출장마사지 · 노원구 홈타이 지역별 예약 안내",
     "body": _BODY,
-    "extra_head": _JSONLD,
+    "extra_head": _NAVER_VERIFY + _JSONLD,
     "breadcrumb": [],
     "hero": _HERO,
 }

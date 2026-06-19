@@ -1,6 +1,6 @@
 # 사이트 공통 설정
-# 배포 도메인 확정 후 BASE_URL 을 실제 도메인으로 변경하세요.
-BASE_URL = "https://www.nowon-massage.example.com"
+# 배포 도메인 (Cloudflare Pages)
+BASE_URL = "https://nowon-massage1.pages.dev"
 
 BRAND = "바로GO"
 PHONE = "0508-202-4719"
