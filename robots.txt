@@ -1,5 +1,26 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nowon-massage1.pages.dev/sitemap.xml
-Sitemap: https://nowon-massage1.pages.dev/rss.xml
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Yeti
+Allow: /
+
+User-agent: NaverBot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Daum
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+Sitemap: https://nowon-massage1.netlify.app/sitemap.xml
+Sitemap: https://nowon-massage1.netlify.app/rss.xml

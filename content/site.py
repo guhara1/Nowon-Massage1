@@ -1,6 +1,6 @@
 # 사이트 공통 설정
-# 배포 도메인 (Cloudflare Pages)
-BASE_URL = "https://nowon-massage1.pages.dev"
+# 배포 도메인 (Netlify)
+BASE_URL = "https://nowon-massage1.netlify.app"
 
 BRAND = "바로GO"
 PHONE = "0508-202-4719"
