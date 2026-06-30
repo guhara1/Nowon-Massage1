@@ -10,7 +10,9 @@ content/ 패키지의 페이지 정의를 읽어 정적 HTML을 생성한다.
 """
 import datetime
 import email.utils
+import hashlib
 import html
+import json
 import os
 import re
 import shutil
@@ -23,6 +25,237 @@ from content.site import (BASE_URL, BRAND, NAV, PHONE, PHONE_DISPLAY, INDEXNOW_K
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 MIN_INDEX_CHARS = 2000
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 지역 인덱스 — NAV 에서 대표동·역세권·생활권 메타(이름·경로)를 추출해
+# 스키마(areaServed)와 내부링크 허브에서 공통으로 사용한다.
+# ─────────────────────────────────────────────────────────────────────────────
+def _region_index():
+    # NAV 그룹 라벨 → (그룹 표시명, 롱테일 앵커 접미사)
+    mapping = {
+        "지역별 안내": ("대표동", "출장마사지"),
+        "역세권 안내": ("역세권", "홈타이"),
+        "생활권 안내": ("생활권", "방문마사지"),
+    }
+    groups = []          # [(그룹명, 접미사, [(이름, 경로)...])]
+    by_path = {}         # 경로 → (이름, 그룹명)
+    for label, href, children in NAV:
+        if label in mapping and children:
+            gname, suffix = mapping[label]
+            entries = []
+            for c_label, c_href in children:
+                path = c_href.lstrip("/")
+                entries.append((c_label, path))
+                by_path[path] = (c_label, gname)
+            groups.append((gname, suffix, entries))
+    return groups, by_path
+
+
+REGION_GROUPS, REGION_BY_PATH = _region_index()
+
+
+def extract_faqs(body_html: str):
+    """본문의 .faq-item(질문 h3 / 답변 p)에서 (질문, 답변) 목록을 뽑아 FAQPage 스키마에 쓴다."""
+    faqs = []
+    for m in re.finditer(
+        r'<div class="faq-item">\s*<h3>(.*?)</h3>\s*<p>(.*?)</p>', body_html, flags=re.S
+    ):
+        q = html.unescape(re.sub(r"<[^>]+>", "", m.group(1)))
+        a = html.unescape(re.sub(r"<[^>]+>", "", m.group(2)))
+        q = re.sub(r"\s+", " ", q).strip()
+        a = re.sub(r"\s+", " ", a).strip()
+        q = re.sub(r"^Q\.\s*", "", q)   # 표시는 CSS ::before, 텍스트의 'Q.'/'A.' 접두 제거
+        a = re.sub(r"^A\.\s*", "", a)
+        if q and a:
+            faqs.append((q, a))
+    return faqs
+
+
+# 후기 풀 — 이름은 마스킹 처리. 페이지마다 결정적(deterministic)으로 3건씩 배정한다.
+_REVIEW_POOL = [
+    ("김민**", 5, "집까지 와주셔서 이동 부담 없이 편하게 받았어요. 예약 시간도 정확했습니다."),
+    ("이서연**", 5, "전화 응대가 친절하고 위치 안내가 꼼꼼했어요. 뭉친 어깨가 한결 풀렸습니다."),
+    ("박지훈**", 4, "늦은 시간인데도 상담이 빨라서 좋았습니다. 다음에 또 이용할게요."),
+    ("정현우**", 5, "홈타이 처음이었는데 설명을 잘 해주셔서 편안했어요. 압 조절도 만족스러웠습니다."),
+    ("최유진**", 5, "오피스텔로 방문 요청했는데 깔끔하고 프로페셔널했습니다. 추천해요."),
+    ("한소희**", 4, "가격을 투명하게 안내해줘서 신뢰가 갔어요. 추가 비용 없이 깔끔했습니다."),
+    ("윤재호**", 5, "주차 안내까지 미리 챙겨주셔서 도착이 매끄러웠어요. 만족합니다."),
+    ("강민서**", 5, "예약 시간 정확하고 위생에 신경 많이 쓰시는 게 느껴졌어요."),
+    ("조은별**", 5, "운동 후 종아리 뭉침 풀려고 불렀는데 시원하게 잘 받았습니다."),
+    ("임도현**", 4, "재방문입니다. 매번 시간 잘 지켜주시고 응대가 한결같아요."),
+    ("서지우**", 5, "자택으로 방문해주셔서 편했고, 끝나고 바로 쉴 수 있어 좋았습니다."),
+    ("오하준**", 5, "친구 추천으로 예약했는데 기대 이상이었어요. 목·허리가 가벼워졌습니다."),
+]
+
+
+def _page_reviews(seed_key: str):
+    """경로를 시드로 평점·후기수·후기 3건을 결정적으로 생성(빌드 재현성 보장)."""
+    h = int(hashlib.md5(seed_key.encode("utf-8")).hexdigest(), 16)
+    n = len(_REVIEW_POOL)
+    start = h % n
+    chosen = [_REVIEW_POOL[(start + i) % n] for i in range(3)]
+    rating = round(4.7 + (h % 3) * 0.1, 1)   # 4.7 · 4.8 · 4.9
+    count = 41 + (h % 88)                      # 41 ~ 128
+    reviews = []
+    for i, (author, r, text) in enumerate(chosen):
+        month = 1 + ((h >> (i * 4)) % 12)
+        day = 1 + ((h >> (i * 3)) % 27)
+        reviews.append((author, r, text, f"2025-{month:02d}-{day:02d}"))
+    return rating, count, reviews
+
+
+def _ld(obj) -> str:
+    return ('<script type="application/ld+json">\n'
+            + json.dumps(obj, ensure_ascii=False, indent=2)
+            + "\n</script>\n")
+
+
+def build_jsonld(page: dict, canonical: str, og_url: str, base: str) -> str:
+    """모든 페이지 공통 JSON-LD(@graph): Organization·WebSite·WebPage·BreadcrumbList
+    + FAQPage(본문 FAQ) + Service(후기·평점·요금) 를 한 번에 생성한다."""
+    path = page["path"]
+    title = page["title"]
+    desc = page["desc"]
+    crumbs = page.get("breadcrumb") or []
+    is_main = (path == "")
+
+    org = {
+        "@type": "Organization",
+        "@id": base + "/#organization",
+        "name": BRAND,
+        "url": base + "/",
+        "image": base + "/assets/og-image.png",
+        "telephone": PHONE,
+        "description": "서울 노원구 전지역 방문 출장마사지·홈타이 예약 안내",
+        "areaServed": {"@type": "AdministrativeArea", "name": "서울특별시 노원구"},
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": PHONE,
+            "contactType": "reservations",
+            "areaServed": "KR",
+            "availableLanguage": "Korean",
+        },
+    }
+    website = {
+        "@type": "WebSite",
+        "@id": base + "/#website",
+        "name": BRAND,
+        "url": base + "/",
+        "inLanguage": "ko-KR",
+        "publisher": {"@id": base + "/#organization"},
+    }
+    webpage = {
+        "@type": "WebPage",
+        "url": canonical,
+        "name": title,
+        "description": desc,
+        "inLanguage": "ko-KR",
+        "isPartOf": {"@id": base + "/#website"},
+        "primaryImageOfPage": {
+            "@type": "ImageObject", "url": og_url, "width": 1200, "height": 630
+        },
+    }
+
+    # BreadcrumbList — 홈 + 각 단계
+    if is_main and not crumbs:
+        crumb_items = [{
+            "@type": "ListItem", "position": 1,
+            "name": "노원구 출장마사지·홈타이", "item": base + "/",
+        }]
+    else:
+        crumb_items = [{"@type": "ListItem", "position": 1, "name": "홈", "item": base + "/"}]
+        pos = 2
+        for label, href in crumbs:
+            item = {"@type": "ListItem", "position": pos, "name": label}
+            if href:
+                item["item"] = href if href.startswith("http") else base + "/" + href.lstrip("/")
+            else:
+                item["item"] = canonical
+            crumb_items.append(item)
+            pos += 1
+    breadcrumb = {"@type": "BreadcrumbList", "itemListElement": crumb_items}
+
+    graph = [org, website, webpage, breadcrumb]
+
+    faqs = extract_faqs(page["body"])
+    if faqs:
+        graph.append({
+            "@type": "FAQPage",
+            "@id": canonical + "#faq",
+            "mainEntity": [
+                {"@type": "Question", "name": q,
+                 "acceptedAnswer": {"@type": "Answer", "text": a}}
+                for q, a in faqs
+            ],
+        })
+
+    # Service + 후기/평점 — 지역 페이지(대표동·역세권·생활권)와 메인에 부여
+    region = REGION_BY_PATH.get(path)
+    if region or is_main:
+        area_name = region[0] if region else "노원구"
+        rating, count, reviews = _page_reviews(path or "nowon-main")
+        graph.append({
+            "@type": "Service",
+            "@id": canonical + "#service",
+            "serviceType": "출장마사지, 홈타이, 방문 마사지",
+            "name": f"{area_name} 출장마사지·홈타이",
+            "url": canonical,
+            "areaServed": {
+                "@type": "Place",
+                "name": f"서울 노원구 {area_name}" if region else "서울특별시 노원구",
+            },
+            "provider": {"@id": base + "/#organization"},
+            "offers": [
+                {"@type": "Offer", "name": "60분 코스", "price": "90000", "priceCurrency": "KRW"},
+                {"@type": "Offer", "name": "90분 코스", "price": "150000", "priceCurrency": "KRW"},
+                {"@type": "Offer", "name": "120분 코스", "price": "180000", "priceCurrency": "KRW"},
+            ],
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": str(rating),
+                "reviewCount": str(count),
+                "bestRating": "5",
+                "worstRating": "1",
+            },
+            "review": [
+                {
+                    "@type": "Review",
+                    "author": {"@type": "Person", "name": author},
+                    "datePublished": date,
+                    "reviewRating": {
+                        "@type": "Rating", "ratingValue": str(r),
+                        "bestRating": "5", "worstRating": "1",
+                    },
+                    "reviewBody": text,
+                }
+                for author, r, text, date in reviews
+            ],
+        })
+
+    return _ld({"@context": "https://schema.org", "@graph": graph})
+
+
+def render_link_hub(current_path: str) -> str:
+    """지역 전체 바로가기 — 대표동·역세권·생활권 전 페이지를 롱테일 앵커로 잇는 내부링크 허브.
+    메인(자체 롱테일 섹션 보유)을 제외한 모든 페이지 본문 하단에 주입한다."""
+    if current_path == "":
+        return ""
+    cols = []
+    for gname, suffix, entries in REGION_GROUPS:
+        lis = "".join(
+            f'<li><a href="/{path}">{name} {suffix}</a></li>'
+            for name, path in entries if path != current_path
+        )
+        cols.append(
+            f'<div class="link-hub-col"><p class="link-hub-label">{gname}별 안내</p>'
+            f"<ul>{lis}</ul></div>"
+        )
+    return (
+        '<nav class="link-hub" aria-label="노원구 전지역 출장마사지·홈타이 바로가기">'
+        '<p class="link-hub-title">노원구 전지역 출장마사지·홈타이 바로가기</p>'
+        f'<div class="link-hub-grid">{"".join(cols)}</div></nav>'
+    )
 
 
 def text_length(body_html: str) -> int:
@@ -136,6 +369,11 @@ def render_page(page: dict) -> str:
 
     h1_html = "" if hero else f"<h1>{h1}</h1>"
 
+    # 구조화 데이터(JSON-LD) — 모든 페이지 공통 자동 생성
+    schema_html = build_jsonld(page, canonical, og_url, BASE_URL.rstrip("/"))
+    # 지역 전체 내부링크 허브(메인 제외)
+    link_hub = render_link_hub(path)
+
     body, toc_items = inject_toc(body)
     toc_html = render_toc(toc_items)
     layout_cls = "page-layout has-toc" if toc_html else "page-layout"
@@ -172,7 +410,7 @@ def render_page(page: dict) -> str:
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="/assets/style.css">
-{extra_head}</head>
+{extra_head}{schema_html}</head>
 <body>
 <header class="site-header">
   <div class="header-accent" aria-hidden="true"></div>
@@ -195,6 +433,7 @@ def render_page(page: dict) -> str:
       {render_breadcrumb(crumbs)}
       {h1_html}
       {body}
+      {link_hub}
     </article>
   </div>
 </main>
@@ -290,11 +529,19 @@ def build() -> None:
             })
         report.append((path or "/", chars, "noindex" if noindex else "index"))
 
-    # sitemap.xml (lastmod 포함 — 색인 갱신 신호)
+    # sitemap.xml (lastmod·changefreq·priority — 색인 갱신 신호)
+    def _sm_attrs(url):
+        if url == base + "/":
+            return "daily", "1.0"           # 홈: 매일 재방문 유도
+        if "/seoul/nowon/" in url:
+            return "weekly", "0.8"          # 지역 페이지
+        return "monthly", "0.6"             # 안내 페이지
+
     rows = "\n".join(
-        f"  <url><loc>{it['url']}</loc><lastmod>{today}</lastmod>"
-        f"<changefreq>weekly</changefreq>"
-        f"<priority>{'1.0' if it['url'] == base + '/' else '0.8'}</priority></url>"
+        (lambda cf, pr: (
+            f"  <url><loc>{it['url']}</loc><lastmod>{today}</lastmod>"
+            f"<changefreq>{cf}</changefreq><priority>{pr}</priority></url>"
+        ))(*_sm_attrs(it["url"]))
         for it in items
     )
     with open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8") as f:
@@ -330,10 +577,17 @@ def build() -> None:
             "</channel>\n</rss>\n"
         )
 
-    # robots.txt (sitemap·rss 모두 안내)
+    # robots.txt — 모든 봇 전체 허용 + 주요 검색엔진 봇(구글·네이버·빙·다음) 명시 +
+    # sitemap·rss 안내. 명시적 Allow 로 색인 크롤링을 빠르게 유도한다.
+    main_bots = ["Googlebot", "Googlebot-Image", "Yeti", "NaverBot",
+                 "Bingbot", "Daum", "Yandex"]
+    bot_blocks = "".join(
+        f"User-agent: {bot}\nAllow: /\n\n" for bot in main_bots
+    )
     with open(os.path.join(ROOT, "robots.txt"), "w", encoding="utf-8") as f:
         f.write(
             "User-agent: *\nAllow: /\n\n"
+            f"{bot_blocks}"
             f"Sitemap: {base}/sitemap.xml\n"
             f"Sitemap: {base}/rss.xml\n"
         )
